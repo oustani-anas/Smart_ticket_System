@@ -1,48 +1,37 @@
-
-import { match } from "assert";
-import { IsEmail,
-         IsString,
-         IsNotEmpty,
-         IsBoolean,
-         MinLength,
-         validate,
-         MATCHES
-        } from "class-validator";
+import { IsEmail, IsString, IsNotEmpty, IsBoolean, MinLength, Matches } from 'class-validator';
 
 export class AuthDto {
-    @IsString()
-    id: string;
-    
-    @IsString()
-    username: string;
+  @IsString()
+  id: string;
 
-    @IsString()
-    avatar: string;
+  @IsString()
+  username: string;
 
-    @IsString()
-    firstName: string;
+  @IsString()
+  avatar: string;
 
-    @IsString()
-    lastName: string;
+  @IsString()
+  firstName: string;
 
-    @IsBoolean()
-    twoFactorAuthEnabled: boolean;
+  @IsString()
+  lastName: string;
 
+  @IsBoolean()
+  twoFactorAuthEnabled: boolean;
 }
 
-export class LoginDto 
-{
-    @IsString()
-    @IsNotEmpty()
-    email: string
-    
-    @IsNotEmpty()
-    password
+export class LoginDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
 }
 
-export class RegisterDto 
-{
-    @IsEmail()
+export class RegisterDto {
+  @IsEmail()
   @IsNotEmpty()
   email: string;
 
@@ -53,7 +42,7 @@ export class RegisterDto
 
   @IsString()
   @IsNotEmpty()
-  @Match('password') // Ensure confirmPassword matches password
+  @Matches('password') // Ensure confirmPassword matches password
   confirmPassword: string;
 
   @IsString()
@@ -66,5 +55,5 @@ export class RegisterDto
 
   @IsString()
   @IsNotEmpty()
-  username: string; // Optional: Add more fields like name, etc.
+  username: string;
 }
