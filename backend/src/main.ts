@@ -4,7 +4,9 @@ import { AppModule } from './app.module';
 async function bootstrap() 
 {
   const app = await NestFactory.create(AppModule);
+  
   await app.listen(process.env.PORT ?? 3000);
+  // console.log("let see : ", process.env.GOOGLE_CALLBACK_URL);
 }
 bootstrap();
 

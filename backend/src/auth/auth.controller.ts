@@ -4,13 +4,16 @@ import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { Req, Res } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+
 @Controller('/auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Get('/test')
-  async test() {
+  @UseGuards(AuthGuard('jwt'))
+  async test(@Res() res) {
     console.log("tessssssst");
+    res.send('inside test');
   }
   
   @Post('/login')
@@ -39,4 +42,11 @@ export class AuthController {
     const jwt = await this.authService.loginWithGoogle(user);
     res.redirect(`http://localhost:3000?token=${jwt.access_token}`);
   }
+
+  @Get('/logout')
+  @UseGuards(AuthGuard('jwt'))
+  async Logout(@Req() req, @Res() res) {
+    res.clearCookie('jwt');
+    return res.status(200).json({ message: 'Logout successful' });
+  } 
 }
