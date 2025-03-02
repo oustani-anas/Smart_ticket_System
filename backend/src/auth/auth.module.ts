@@ -7,11 +7,19 @@ import { UserService } from '../user/user.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { PassportModule } from '@nestjs/passport';
 import { GoogleStrategy } from './strategy/google.strategy';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+
+
 @Module({
   imports: [
-    JwtModule.register({
-      secret: 'your-secret-key', // Use environment variables for production
-      signOptions: { expiresIn: '1h' },
+    ConfigModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '1h' },
+      }),
     }),
     PassportModule.register({ defaultStrategy: 'google' }),
   ],
