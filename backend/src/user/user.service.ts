@@ -44,4 +44,35 @@ export class UserService {
     }
     return null;
   }
+
+  async findAll() {
+    return this.prisma.user.findMany();
+  }
+
+  // Get user by ID
+  async findOneById(id: string) {
+    return this.prisma.user.findUnique({ where: { id } });
+  }
+
+  // Update user role
+  async updateRole(id: string, role: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { role },
+    });
+  }
+
+  // Delete user
+  async delete(id: string) {
+    return this.prisma.user.delete({ where: { id } });
+  }
+
+  // Ban / Unban user
+  async updateBanStatus(id: string, isBanned: boolean) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { isBanned },
+    });
+  }
+
 }

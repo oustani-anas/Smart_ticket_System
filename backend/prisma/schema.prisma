@@ -1,30 +1,72 @@
 
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "postgresql" // or "mysql", "sqlite", etc.
+  url      = env("DATABASE_URL") // Use environment variable for the database URL
 }
 
 model User {
-  id                   String   @id @default(uuid())
+  id                   String    @id @default(uuid())
   username             String?          @unique
-  avatar               String?
-  email                String           @unique
   firstname            String
-  password             String?
   lastname             String
-  firstlogin           Boolean         @default(true)
-  role                 String?           @default("user")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  email                String           @unique
+  password             String?
+  avatar               String?
+  contactDetails       String?
+  facialData           String?   // Store facial recognition data (e.g., a reference to the file or hash)
+  resetToken            String?
+  resetTokenExpiry     DateTime?
+  isBanned            Boolean   @default(false)
+  role                String    @default("user") // Roles: user, admin
+  tickets             Ticket[]  // A user can have multiple tickets
+  payments            Payment[] // A user can have multiple payments
+  reports             Report[]  // An admin can generate multiple reports
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 }
 
+model Ticket {
+  id          String    @id @default(uuid())
+  type        String    // e.g., single, daily, weekly, monthly
+  status      String    // e.g., valid, expired
+  expiration  DateTime  // Expiration date of the ticket
+  qrCode      String?   // QR code for the ticket
+  nfcTag      String?   // NFC tag for the ticket
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  payment     Payment?  @relation("TicketPayment") // Name the relation
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Payment {
+  id          String    @id @default(uuid())
+  amount      Float
+  method      String    // e.g., credit card, digital wallet
+  status      String    // e.g., pending, completed
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  ticketId    String?   @unique // Foreign key to Ticket
+  ticket      Ticket?   @relation("TicketPayment", fields: [ticketId], references: [id]) // Define the relation
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Report {
+  id              String    @id @default(uuid())
+  date            DateTime
+  totalRevenue    Float
+  peakUsageTime   DateTime
+  adminId         String
+  admin           User      @relation(fields: [adminId], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Event {
+  id     String @id @default(uuid()) 
+}
