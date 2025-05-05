@@ -1,7 +1,7 @@
 
 import { Body, Controller, Post } from '@nestjs/common';
 import { PaymentService } from './payment.service';
-import { Res, Headers } from '@nestjs/common';
+import { Req, Res, Headers } from '@nestjs/common';
 import { Request, Response } from 'express'
 import Stripe from 'stripe';
 
@@ -22,8 +22,8 @@ export class PaymentController {
 
     // Webhook for stripe 
 
-    @Post('/webhook')
-    async handleStripeWebhook(
+    @Post('webhook')
+  async handleStripeWebhook(
     @Req() req: Request,
     @Headers('stripe-signature') sig: string,
   ) {
@@ -32,7 +32,7 @@ export class PaymentController {
 
     try {
       event = this.paymentService['stripe'].webhooks.constructEvent(
-        req.rawBody,
+        req['rawBody'],
         sig,
         endpointSecret,
       );
@@ -42,5 +42,4 @@ export class PaymentController {
 
     await this.paymentService.handleWebhook(event);
   }
-
 }
