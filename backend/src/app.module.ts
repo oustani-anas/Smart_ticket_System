@@ -7,10 +7,9 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
-import { AdminController } from './admin/admin.controller';
-import { UserService } from './user/user.service';
 import { TicketModule } from './ticket/ticket.module';
 import { PaymentModule } from './payment/payment.module';
+import { EventsModule } from './events/events.module';
 
 
 @Module({
@@ -21,9 +20,11 @@ import { PaymentModule } from './payment/payment.module';
     PrismaModule,
     ConfigModule.forRoot({ isGlobal: true }),
     TicketModule,
-    PaymentModule
+    PaymentModule,
+    EventsModule
   ],
-  controllers: [AppController, AdminController],
+  controllers: [AppController],
   providers: [AppService],
 })
+
 export class AppModule {}

@@ -1,5 +1,5 @@
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { RegisterDto } from '../auth/dto/auth.dto';
@@ -22,11 +22,14 @@ export class UserService {
   }
 
   async findUserByEmail(email: string) {
-    return this.prisma.user.findUnique({ where: { email } });
+    const user = this.prisma.user.findUnique({ where: { email } });
+    if(!user)
+      throw new NotFoundException('User not Found')
+    return user
   }
 
   async findUserByEmailOrUsername(email: string, username: string) {
-    return this.prisma.user.findFirst({
+    const user = this.prisma.user.findFirst({
       where: {
         OR: [
           { email },
@@ -34,10 +37,19 @@ export class UserService {
         ],
       },
     });
+
+    if(!user)
+      throw new NotFoundException('User not Found');
+
+    return user;
   }
   
   
   async validateUser(email: string, password: string) {
+    if(!email || !password)
+      throw new BadRequestException('Unexpected fields in request body');
+    console.log('email: ', email);
+    console.log('password: ', password);
     const user = await this.findUserByEmail(email);
     if (user && (await bcrypt.compare(password, user.password))) {
       return user;

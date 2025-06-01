@@ -12,7 +12,8 @@ export class TicketController {
     @Body('type') type: string,
     @Body('expiration') expiration: Date,
   ) {
-    return this.ticketService.purchaseTicket(userId, type, expiration);
+    console.log("recieved body: ", userId, type, expiration);
+    // return this.ticketService.purchaseTicket(userId, type, expiration);
   }
 
   @Get(':id/validate')

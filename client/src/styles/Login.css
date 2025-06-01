@@ -1,0 +1,232 @@
+
+.login-main{
+    display: flex;
+    height: 100vh;
+  }
+  
+  .login-left{
+    flex-grow: 1;
+    height: 100vh;
+    background-color: #E9E9E9;
+  
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .login-left img{
+    width: 600px;
+  }
+  
+  .login-right{
+    height: 100vh;
+    flex-grow: 1;
+  
+  }
+  
+  .login-right-container{
+    height: 100%;
+    width: 80%;
+    margin: 0 auto;
+  
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  
+  }
+  
+  .login-right form{
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .login-logo{
+    align-self: center;
+    padding-top: 50px;
+  }
+  
+  .login-center{
+    margin: auto 0;
+  }
+  
+  .login-logo img{
+    width: 50px;
+  }
+  
+  .login-center h2{
+    font-size: 35px;
+    color: green;
+  }
+  
+  .login-center{
+    text-align: center;
+  }
+  
+  .login-center p{
+    font-weight: 400;
+    font-size: 20px;
+    margin-bottom: 40px;
+    color: rgb(9, 102, 9);
+  }
+  
+  form input[type='email'],
+  form input[type='password'],
+  form input[type='text']
+   {
+    width: 100%;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 0px;
+    border-bottom: 1px solid rgb(0, 0, 0);
+    outline: none;
+    box-sizing: border-box;
+  }
+  
+  .pass-input-div{
+    position: relative;
+  }
+  
+  .pass-input-div svg{
+    font-size: 20px;
+    position: absolute;
+    right: 10px;
+    bottom: 35px;
+    cursor: pointer;
+    outline: none;
+    margin-bottom: 100;
+    margin-top: 10;
+  }
+  
+  form button[type='submit'] {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 30px;
+    font-weight: 600;
+  }
+  
+  
+  .login-center-options{
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .remember-div{
+    display:flex;
+    align-items: center;
+    column-gap: 5px;
+  }
+  
+  .remember-div label{
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 2px;
+  }
+  
+  .forgot-pass-link{
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(17, 138, 17);
+  }
+  
+  .forgot-pass-link:hover{
+    text-decoration: underline;
+  }
+  
+  .login-center-buttons{
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+  }
+  
+  .login-center-buttons button:nth-child(1){
+    background: rgb(0, 0, 0);
+    color: white;
+    border: 3px solid black;
+    transition: background 1s linear 0ms;
+    transition: color 500ms linear 0ms;
+  }
+  
+  .login-center-buttons button:nth-child(1):hover{
+    color: white;
+    background-color: rgb(24, 21, 21);
+  }
+  
+  .login-center-buttons button:nth-child(2){
+    background: #F0F0F0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    column-gap: 10px;
+    transition: background 500ms linear 0ms;
+  }
+  
+  .login-center-buttons button:nth-child(2) img{
+    width: 30px;
+  }
+  
+  .login-center-buttons button:nth-child(2):hover{
+    background: #c4c4c4c2;
+  }
+  
+  .login-bottom-p{
+    text-align: center;
+    font-size: 15px;
+    padding-bottom: 40px;
+  }
+  
+  .login-bottom-p a{
+    text-decoration: none;
+    font-weight: 600;
+    color: rgb(17, 138, 17);
+  }
+  
+  .login-bottom-p a:hover{
+    text-decoration: underline;
+  }
+
+
+
+  .camera-btn {
+    background-color: #1aab3c;
+    color: white;
+    column-gap: 10px;
+    border: 3px solid #1aab3c;
+    border-radius: 10px;
+    padding: 12px;
+    width: 100%;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 10px; 
+  }
+  
+  .camera-btn:hover {
+    background-color: #158a30;
+  }
+  
+
+  .form-error-message {
+    all: unset; /* ✅ clear inherited styles */
+    display: block;
+    color: red;
+    font-size: 14px;
+    margin: 0px 0 10px 0;
+    text-align: left;
+    font-weight: 300;
+  }
+
+  .error-input {
+    border-bottom: 2px solid rgb(238, 91, 91) !important;
+  }
+  
+  
+  
+  

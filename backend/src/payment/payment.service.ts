@@ -4,16 +4,21 @@ import Stripe from 'stripe';
 import { InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class PaymentService {
     private stripe: Stripe;
     private readonly logger = new Logger(PaymentService.name)
-    constructor(private configservice: ConfigService) {
+    
+    constructor(
+      private configservice: ConfigService,
+      private prisma: PrismaService
+    ) {
         this.stripe = new Stripe(configservice.get<string>('Stripe_Secret'));
     }
 
-    async createCheckoutSession(
+    /*async createCheckoutSession(
         amount: number,
         currency: string,
         productId: string,
@@ -52,7 +57,45 @@ export class PaymentService {
               'Failed to create checkout session', // Handle errors gracefully
             );
         }
-    }
+    }*/
+
+        async createCheckoutSession(eventId: string, userId: string): Promise<{ checkoutUrl: string }> {
+          try {
+            const event = await this.prisma.event.findUnique({ where: { id: eventId } });
+      
+            if (!event) {
+              throw new InternalServerErrorException('Event not found');
+            }
+            console.log("inside the creation of session of the payment");
+            const session = await this.stripe.checkout.sessions.create({
+              line_items: [
+                {
+                  price_data: {
+                    currency: 'usd',
+                    product_data: {
+                      name: event.name,
+                    },
+                    unit_amount: Math.round(event.price * 100), // cents
+                  },
+                  quantity: 1,
+                },
+              ],
+              mode: 'payment',
+              success_url: `http://localhost:3000/payment-success`,
+              cancel_url: `http://localhost:3000/events`,
+              metadata: {
+                eventId,
+                userId,
+              },
+            });
+      
+            return { checkoutUrl: session.url };
+          } catch (error) {
+            this.logger.error(`Stripe session creation failed: ${(error as Error).message}`);
+
+            throw new InternalServerErrorException('Could not create checkout session');
+          }
+        }
 
     async handleWebhook(event: Stripe.Event) {
       switch (event.type) {

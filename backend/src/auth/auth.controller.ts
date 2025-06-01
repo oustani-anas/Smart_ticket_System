@@ -22,6 +22,12 @@ export class AuthController {
     res.send('inside test');
   }
   
+  @UseGuards(AuthGuard('jwt'))
+  @Get('validate')
+  getDashboard() {
+    return { message: 'Welcome to the dashboard!' };
+  }
+
   @Post('/login')
   async login(@Body() loginDto: LoginDto) {
     console.log("inside the login endpoint")
@@ -30,6 +36,7 @@ export class AuthController {
 
   @Post('/register')
   async register(@Body() registerDto: RegisterDto) {
+    console.log("resgister DTO: " , registerDto);
     return this.authService.register(registerDto);
   }
 
@@ -46,7 +53,7 @@ export class AuthController {
     console.log( "the user is logged with google oauth");
     const user = req.user;
     const jwt = await this.authService.loginWithGoogle(user);
-    res.redirect(`http://localhost:3000?token=${jwt.access_token}`);
+    res.redirect(`http://localhost:3000?token=${jwt.token}`);
   }
 
   @Get('/logout')

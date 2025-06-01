@@ -29,16 +29,33 @@ model User {
   updatedAt           DateTime  @updatedAt
 }
 
+enum TicketType {
+  SINGLE
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+
+enum TicketStatus {
+  VALID
+  EXPIRED
+  USED
+  CANCELLED
+}
+
 model Ticket {
   id          String    @id @default(uuid())
-  type        String    // e.g., single, daily, weekly, monthly
-  status      String    // e.g., valid, expired
+  type        TicketType    // e.g., single, daily, weekly, monthly
+  status      TicketStatus    // e.g., valid, expired
   expiration  DateTime  // Expiration date of the ticket
   qrCode      String?   // QR code for the ticket
   nfcTag      String?   // NFC tag for the ticket
   userId      String
   user        User      @relation(fields: [userId], references: [id])
   payment     Payment?  @relation("TicketPayment") // Name the relation
+  eventId     String
+  event       Event     @relation(fields: [eventId], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
@@ -68,5 +85,16 @@ model Report {
 }
 
 model Event {
-  id     String @id @default(uuid()) 
+  id          String   @id @default(uuid())
+  name        String             // Name of the event
+  description String?            // Optional: summary or details
+  location    String             // Where the event takes place
+  startTime   DateTime           // Event start time
+  endTime     DateTime?          // Optional: event end time
+  capacity    Int?               // Max number of attendees (optional)
+  price       Float?             // Optional override for ticket price
+  isActive    Boolean  @default(true)  // Flag to show/hide event
+  tickets     Ticket[]           // All tickets purchased for this event
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
