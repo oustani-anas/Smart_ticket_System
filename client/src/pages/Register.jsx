@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "../assets/ticket2.png";
 import Logo from "../assets/face2.png";
 import GoogleSvg from "../assets/icons8-google.svg";
@@ -7,17 +7,14 @@ import { FaEye } from "react-icons/fa6";
 import { FaEyeSlash } from "react-icons/fa6";
 import "../styles/Register.css";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { toast } from "react-toastify";
 import TypewriterBanner from "../components/TypewriterBanner";
+import api from "../api/axios";
 
-
-const Login = () => {
+const Register = () => {
   const [ showPassword, setShowPassword ] = useState(false);
   const navigate = useNavigate();
   const [ token, setToken ] = useState(JSON.parse(localStorage.getItem("auth")) || "");
-
-
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
@@ -38,18 +35,18 @@ const Login = () => {
           password
         };
         try {
-        const response = await axios.post("http://localhost:4000/auth/register", formData);
+        const response = await api.post("/auth/register", formData);
          toast.success("Registration successfull");
          navigate("/login");
        } catch(err){
          toast.error(err.message);
        }
-      }else{
+      } else{
         toast.error("Passwords don't match");
       }
     
 
-    }else{
+    } else {
       toast.error("Please fill all inputs");
     }
 
@@ -112,4 +109,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;

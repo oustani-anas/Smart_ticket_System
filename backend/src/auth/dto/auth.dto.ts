@@ -1,4 +1,10 @@
-import { IsEmail, IsString, IsNotEmpty, IsBoolean, MinLength, Matches } from 'class-validator';
+
+import { IsEmail,
+  IsString,
+  IsNotEmpty,
+  IsBoolean,
+  MinLength,
+  Matches } from 'class-validator';
 
 export class AuthDto {
   @IsString()
@@ -42,7 +48,7 @@ export class RegisterDto {
 
   @IsString()
   @IsNotEmpty()
-  @Matches('password') // Ensure confirmPassword matches password
+  // @Matches('password') // Ensure confirmPassword matches password
   confirmPassword: string;
 
   @IsString()
@@ -53,7 +59,7 @@ export class RegisterDto {
   @IsNotEmpty()
   lastname: string;
 
-  @IsString()
-  @IsNotEmpty()
-  username: string;
+  // @IsString()
+  // @IsNotEmpty()
+  // username: string;
 }

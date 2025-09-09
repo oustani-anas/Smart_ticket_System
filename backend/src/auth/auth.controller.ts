@@ -1,12 +1,20 @@
 
-import { Controller, Post, Body, Get, UseGuards } from '@nestjs/common';
+import { Controller, 
+  Post, 
+  Body, 
+  Get, 
+  UseGuards,
+  NotFoundException,
+  Res,
+  Req,
+  HttpCode,
+  HttpStatus } 
+  from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
-import { Req, Res } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { NotFoundException } from '@nestjs/common';
 import { UserService } from '../user/user.service';
-
+import { Response, Request } from 'express';
 
 @Controller('/auth')
 export class AuthController {
@@ -16,23 +24,35 @@ export class AuthController {
   ) {}
 
   @Get('/test')
-  // @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'))
   async test(@Res() res) {
     console.log("tessssssst");
     res.send('inside test');
   }
   
   @UseGuards(AuthGuard('jwt'))
-  @Get('validate')
+  @Get('/validate')
   getDashboard() {
+    console.log("test inside the validate endpoint");
     return { message: 'Welcome to the dashboard!' };
   }
 
   @Post('/login')
-  async login(@Body() loginDto: LoginDto) {
-    console.log("inside the login endpoint")
-    return this.authService.login(loginDto);
-  }
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
+    const { token } = await this.authService.login(loginDto);
+
+  res.cookie('access_token', token, {
+    httpOnly: true,
+    secure: false, // true in production
+    sameSite: 'lax',
+    maxAge: 1000 * 60 * 15, // 15 minutes
+  });
+
+  // return { message: 'Login successful' };
+  return {"access_token":token};
+}
+
 
   @Post('/register')
   async register(@Body() registerDto: RegisterDto) {
@@ -41,6 +61,14 @@ export class AuthController {
   }
 
 
+  @Post('/google/token')
+  @UseGuards(AuthGuard('google-token'))
+  async googleAuthToken(@Req() req: Request) {
+    const user = req.user;
+    console.log('user = ', user)
+    return this.authService.loginWithGoogle(user);
+  }
+  
   @Get('/google')
   @UseGuards(AuthGuard('google'))
   async googleAuth() {
@@ -58,10 +86,11 @@ export class AuthController {
 
   @Get('/logout')
   @UseGuards(AuthGuard('jwt'))
-  async Logout(@Req() req, @Res() res) {
-    res.clearCookie('jwt');
-    return res.status(200).json({ message: 'Logout successful' });
+  logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('access_token');
+    return { message: 'Logout successful' };
   }
+
   
   @Post('/forgot-password')
   async forgotPassword(@Body('email') email: string) {

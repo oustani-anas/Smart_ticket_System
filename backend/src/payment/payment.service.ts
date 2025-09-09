@@ -1,10 +1,12 @@
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import Stripe from 'stripe';
 import { InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { TicketService } from 'src/ticket/ticket.service';
+
 
 @Injectable()
 export class PaymentService {
@@ -12,54 +14,14 @@ export class PaymentService {
     private readonly logger = new Logger(PaymentService.name)
     
     constructor(
-      private configservice: ConfigService,
-      private prisma: PrismaService
+      private readonly configservice: ConfigService,
+      private readonly prisma: PrismaService,
+      @Inject(forwardRef(() => TicketService))
+      private readonly ticketservise: TicketService
     ) {
         this.stripe = new Stripe(configservice.get<string>('Stripe_Secret'));
     }
-
-    /*async createCheckoutSession(
-        amount: number,
-        currency: string,
-        productId: string,
-        quantity: number
-    ): Promise<Stripe.Checkout.Session> {
-        try {
-            console.log('inside craete session stripe ');
-            const session = await this.stripe.checkout.sessions.create({
-              line_items: [
-                {
-                  price_data: {
-                    currency: currency,
-                    product_data: {
-                      name: `Test Product`, // You can customize the product name as needed
-                      // Additional product information can be added here
-                    },
-                    unit_amount: amount * 100, // Amount is in cents
-                  },
-                  quantity: quantity, // Specify the quantity of the product
-                },
-              ],
-              mode: 'payment', // Set the mode to 'payment'
-              success_url: `http://localhost:3000/success.html`, // Redirect URL on success
-              cancel_url: `http://localhost:3000/cancel.html`, // Redirect URL on cancellation
-              metadata: {
-                // Pass any additional data here, such as user ID 
-                // or product ID for handling in webhooks
-                productId: productId,
-              },
-            });
-      
-            return session; // Return the created session
-          } catch (error) {
-            console.error('Error creating session:', error);
-            throw new InternalServerErrorException(
-              'Failed to create checkout session', // Handle errors gracefully
-            );
-        }
-    }*/
-
-        async createCheckoutSession(eventId: string, userId: string): Promise<{ checkoutUrl: string }> {
+    async createCheckoutSession(eventId: string, userId: string): Promise<{ checkoutUrl: string }> {
           try {
             const event = await this.prisma.event.findUnique({ where: { id: eventId } });
       
@@ -81,8 +43,9 @@ export class PaymentService {
                 },
               ],
               mode: 'payment',
-              success_url: `http://localhost:3000/payment-success`,
-              cancel_url: `http://localhost:3000/events`,
+              // success_url: `http://localhost:5173/paymentSuccess`,
+              success_url: `http://localhost:5173/paymentSuccess?session_id={CHECKOUT_SESSION_ID}`,
+              cancel_url: `http://localhost:5173/events`,
               metadata: {
                 eventId,
                 userId,
@@ -97,33 +60,130 @@ export class PaymentService {
           }
         }
 
-    async handleWebhook(event: Stripe.Event) {
-      switch (event.type) {
-        case 'checkout.session.completed':
-          this.logger.log('Checkout session completed:', event.data.object);
-          // Implement your business logic for successful checkout here
-          // For example:
-          const session = event.data.object as Stripe.Checkout.Session;
-          // You can retrieve relevant information from the session object
-          const { payment_status, customer, metadata } = session;
+      async getSession(sessionId: string) {
+        return this.stripe.checkout.sessions.retrieve(sessionId);
+      }
+
+    // this one for mobile app 
+    async createPaymentIntent(eventId: string, userId: string): Promise<{ clientSecret: string }> {
+      try {
+        // 1. Get the event from the database to ensure the price is correct
+        const event = await this.prisma.event.findUnique({ where: { id: eventId } });
   
-          if (payment_status === 'paid') {
-            // Handle successful payment, e.g., update order status in the database
-            this.logger.log(`Payment was successful for customer: ${customer}`);
-            // You might want to send an email or update your database here
-          } else {
-            this.logger.warn('Payment status is not successful:', payment_status);
-          }
-          break;
-  
-        case 'checkout.session.expired':
-          this.logger.log('Checkout session expired:', event.data.object);
-          // Handle session expiration (e.g., notify the user or update the database)
-          break;
-  
-        default:
-          this.logger.warn(`Unhandled event type ${event.type}`);
-          break;
+        if (!event) {
+          throw new InternalServerErrorException('Event not found');
+        }
+
+        // 2. Create a PaymentIntent on Stripe's servers
+        console.log("inside the payment intent creation");  
+        const paymentIntent = await this.stripe.paymentIntents.create({
+          amount: Math.round(event.price * 100), // Amount in cents
+          currency: 'usd', // Or your desired currency
+          automatic_payment_methods: {
+            enabled: true, // Let Stripe manage payment methods (cards, Google Pay, etc.)
+          },
+          // 3. IMPORTANT: Add the same metadata so your webhook can create the ticket!
+          metadata: {
+            eventId,
+            userId,
+          },
+        });
+        // 4. Return the client_secret to the Flutter app
+        return { clientSecret: paymentIntent.client_secret };
+
+      } catch (error) {
+        this.logger.error(`Stripe Payment Intent creation failed: ${(error as Error).message}`);
+        throw new InternalServerErrorException('Could not initiate payment');
       }
     }
+
+    
+  async handleWebhook(event: Stripe.Event) {
+  this.logger.log(`Received Stripe event: ${event.type}`);
+
+  switch (event.type) {
+    // This case is for your web app
+    case 'checkout.session.completed': {
+      const session = event.data.object as Stripe.Checkout.Session;
+      if (session.payment_status === 'paid') {
+        // Call a helper function to create the ticket
+        await this.createTicketFromWebhook(session.metadata);
+      }
+      break;
+    }
+
+    // ====================================================================
+    // NEW CASE FOR YOUR FLUTTER APP
+    // ====================================================================
+    case 'payment_intent.succeeded': {
+      console.log("inside the flutter webhook handler ");
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      // We pass the same metadata to our helper function
+      await this.createTicketFromWebhook(paymentIntent.metadata);
+      break;
+    }
+
+    default:
+      this.logger.warn(`Unhandled event type: ${event.type}`);
+      break;
+  }
+}
+
+// ====================================================================
+// NEW HELPER METHOD TO AVOID CODE DUPLICATION
+// ====================================================================
+private async createTicketFromWebhook(metadata: Stripe.Metadata) {
+  const userId = metadata.userId;
+  const eventId = metadata.eventId;
+
+  if (!userId || !eventId) {
+    this.logger.error('Webhook metadata missing userId or eventId');
+    return;
+  }
+  
+  // Check if ticket already exists (avoid duplicates)
+  const existingTicket = await this.prisma.ticket.findFirst({
+    where: { userId, eventId },
+  });
+
+  if (existingTicket) {
+    this.logger.warn(`Ticket already exists for user ${userId} and event ${eventId}. Skipping.`);
+    return;
+  }
+
+  const eventRecord = await this.prisma.event.findUnique({
+    where: { id: eventId },
+  });
+
+  if (!eventRecord) {
+    this.logger.warn(`Event not found: ${eventId}`);
+    return;
+  }
+
+  // Create the ticket
+  const ticket = await this.prisma.ticket.create({
+    data: {
+      userId,
+      eventId,
+      type: 'SINGLE',
+      status: 'VALID',
+      expiration: eventRecord.endTime,
+    },
+  });
+  
+  // Create the payment record
+  await this.prisma.payment.create({
+    data: {
+      userId,
+      amount: eventRecord.price ?? 0,
+      method: 'stripe',
+      status: 'completed',
+      ticketId: ticket.id,
+    },
+  });
+
+  this.logger.log(`✅ Ticket created: ${ticket.id} for user ${userId} from event ${eventId}`);
+  
+  // TODO: Here is where you would trigger PDF generation and email sending
+}
 }

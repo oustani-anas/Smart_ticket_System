@@ -1,8 +1,9 @@
 
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
-import { Dashboard, HomeLayout, Landing, Login, Logout, Register } from "./pages";
-import { ToastContainer, toast } from 'react-toastify';
+import { Dashboard, HomeLayout, Landing, Login, Register, PaymentSuccess } from "./pages";
+import { ToastContainer } from 'react-toastify';
 import Events from "./pages/Events";
+import Profile from "./pages/Profile";
 
 const router = createBrowserRouter([
   {
@@ -26,24 +27,26 @@ const router = createBrowserRouter([
         element: <Dashboard />,
       },
       {
-        path: "logout",
-        element: <Logout />,
-      },
-      {
         path: "events",
         element: <Events />,
+      },
+      {
+        path: "profile",
+        element: <Profile />,
+      },
+      {
+        path: "paymentSuccess",
+        element: <PaymentSuccess />,
       }
     ],
   },
 ]);
 
 function App() {
-
-
   return (
     <>
-        <RouterProvider router={router} />
-        <ToastContainer position='top-center' />
+        <RouterProvider router = {router} />
+        <ToastContainer position = 'top-center' />
     </>
   )
 }

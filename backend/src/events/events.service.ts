@@ -15,7 +15,7 @@ export class EventService {
         const events = await this.prisma.event.findMany({
             where: {
               isActive: true,
-              startTime: { gte: new Date() },
+              // startTime: { gte: new Date() }, this is necessary for the events upcoming
             },
             orderBy: { startTime: 'asc' },
           });

@@ -1,5 +1,5 @@
 // components/Navbar.jsx
-import React from 'react';
+
 import { Link } from 'react-router-dom';
 import '../styles/Navbar.css'; // make sure this path matches your file
 import Events from '../pages/Events';

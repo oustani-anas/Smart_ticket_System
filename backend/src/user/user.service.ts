@@ -7,18 +7,22 @@ import { RegisterDto } from '../auth/dto/auth.dto';
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
-
+  
   async createUser(registerDto: RegisterDto) {
-    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
-    return this.prisma.user.create({
-      data: {
-        email: registerDto.email,
-        password: hashedPassword,
-        firstname: registerDto.firstname,
-        lastname: registerDto.lastname,
-        username: registerDto.username,
-      },
-    });
+    try {
+      const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+      return this.prisma.user.create({
+        data: {
+          email: registerDto.email,
+          password: hashedPassword,
+          firstname: registerDto.firstname,
+          lastname: registerDto.lastname,
+          // username: registerDto.username,
+        },
+      });
+    } catch(error) {
+      throw new BadRequestException('Invalid Registration Data');
+    }
   }
 
   async findUserByEmail(email: string) {
@@ -86,5 +90,44 @@ export class UserService {
       data: { isBanned },
     });
   }
+
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        firstname: true,
+        lastname: true,
+        email: true,
+        avatar: true,
+        tickets: {
+          select: {
+            id: true,
+            event: {
+              select: {
+                name: true,
+                location: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return {
+      firstname: user.firstname,
+      lastname: user.lastname,
+      email: user.email,
+      avatar: user.avatar,
+      tickets: user.tickets.map((ticket) => ({
+        id: ticket.id,
+        event: {
+          name: ticket.event.name,
+          date: ticket.event.location,
+        },
+      })),
+    };
+  }
+    
+
 
 }

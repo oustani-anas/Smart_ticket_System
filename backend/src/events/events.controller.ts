@@ -1,8 +1,9 @@
-import { Controller, Post, Get, Body } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
 import { EventService } from './events.service';
-
+import { AuthGuard } from '@nestjs/passport';
 // event.controller.ts
 
+// @UseGuards(AuthGuard('jwt'))
 @Controller('/events')
 export class EventController {
   constructor(private readonly eventService: EventService) {}

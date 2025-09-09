@@ -7,17 +7,16 @@ import { FaEye } from "react-icons/fa6";
 import { FaEyeSlash } from "react-icons/fa6";
 import "../styles/Login.css";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axios";
 import { toast } from "react-toastify";
 import TypewriterBanner from "../components/TypewriterBanner"
 
+
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [token, setToken ] = useState(localStorage.getItem("token") || "");
   const [errorMessage, setErrorMessage] = useState("")
   const [hasError, setHasError] = useState(false)
   const navigate = useNavigate();
-
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -31,14 +30,8 @@ const Login = () => {
       };
 
       try {
-        const response = await axios.post("http://localhost:4000/auth/login", formData, {
-          withCredentials: false, // only true if you use cookies
-        });
+        const response = await api.post("auth/login", formData);
         console.log('response: ', response.data);
-        const token = response.data.token;
-        if(!token)
-          console.log("No token ")
-        localStorage.setItem('auth', JSON.stringify(token));
         toast.success("Login successfull");
         navigate("/dashboard");
       } catch (err) {
@@ -70,26 +63,19 @@ const Login = () => {
     }
   };
 
-  /*useEffect(() => {
-    if(token !== ""){
-      toast.success("You already logged in");
-      navigate("/dashboard");
-    }
-  }, []);*/
-
   useEffect(() => {
-    if (!token) return; // wait until token is actually checked
-  
-    try {
-      const parsed = JSON.parse(token);
-      if (parsed) {
-        toast.success("You already logged in");
+    const checkUserStatus = async () => {
+      try {
+        await api.get("/auth/profile"); 
+        toast.info("You are already logged in.");
         navigate("/dashboard");
+      } catch (error) {
+        console.log("No active session found.");
       }
-    } catch (e) {
-      localStorage.removeItem("token"); // clear broken token
-    }
-  }, [token]);
+    };
+
+    checkUserStatus();
+  }, [navigate]); 
   
 
   return (
@@ -110,7 +96,7 @@ const Login = () => {
             <form onSubmit={handleLoginSubmit}>
               <input 
                 type="email" 
-                placeholder="Email" 
+                placeholder="Email"
                 name="email" 
                 className={hasError ? "error-input" : ""}
                 onChange={() => setHasError(false)}

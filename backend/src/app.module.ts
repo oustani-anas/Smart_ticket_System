@@ -1,5 +1,5 @@
 
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AdminModule } from './admin/admin.module';
@@ -10,13 +10,13 @@ import { ConfigModule } from '@nestjs/config';
 import { TicketModule } from './ticket/ticket.module';
 import { PaymentModule } from './payment/payment.module';
 import { EventsModule } from './events/events.module';
-
+import { LoggerMiddleware } from './middleware/logger.middleware';
 
 @Module({
   imports: [
     AdminModule, 
     UserModule, 
-    AuthModule, 
+    AuthModule,
     PrismaModule,
     ConfigModule.forRoot({ isGlobal: true }),
     TicketModule,
@@ -27,4 +27,5 @@ import { EventsModule } from './events/events.module';
   providers: [AppService],
 })
 
+//export class AppModule {}
 export class AppModule {}

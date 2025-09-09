@@ -1,0 +1,11 @@
+SequenceDiagram
+
+  User ->> Stripe: Pays successfully
+  Stripe ->> Frontend: Redirect to /payment-success?session_id=...
+  Frontend ->> Backend: POST /tickets/confirm-payment (with session_id)
+  Backend ->> Stripe API: Verify session_id
+  Stripe API ->> Backend: Payment info + customer data
+  Backend ->> DB: Save ticket
+  Backend ->> QR/PDF: Generate ticket file
+  Backend ->> Email Service: Send ticket with attachment
+  Backend ->> Frontend: Return ticket download link or ticketId

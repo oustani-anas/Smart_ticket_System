@@ -9,22 +9,9 @@ import Stripe from 'stripe';
 @Controller('/payment')
 export class PaymentController {
     constructor(private readonly paymentService: PaymentService){}
-    
-    /*@Post('/create-checkout-session')
-    async CreateCheckoutSession(@Body() body :{
-        amount: number, 
-        currency: string,
-        productId: string,
-        quantity: number }): Promise<Stripe.Checkout.Session> 
-    {
-        const { amount, currency, productId, quantity } = body;
-        console.log("inside sesion endpoint ")
-        return this.paymentService.createCheckoutSession(amount, currency, productId, quantity);
-    }*/
-
-        @UseGuards(AuthGuard('jwt'))
-        @Post('/create-checkout-session')
-        async createCheckoutSession(
+      @UseGuards(AuthGuard('jwt'))
+      @Post('/create-checkout-session')
+      async createCheckoutSession(
           @Req() req: Request,
           @Body('eventId') eventId: string,
         ) {
@@ -35,14 +22,30 @@ export class PaymentController {
           return this.paymentService.createCheckoutSession(eventId, userId);
         }
     
+    @UseGuards(AuthGuard('jwt')) // Protect this endpoint just like the other one
+    @Post('/create-payment-intent')
+    async createPaymentIntent(
+      @Req() req: Request,
+      @Body('eventId') eventId: string,
+    ) {
+      // The payload from the strategy is now on req.user
+      // The user ID is in the 'sub' property.
+      const userId = req.user['id']; // UPDATED from 'id' to 'sub'
 
+      if (!userId) {
+        throw new Error('User ID not found in token.');
+      }
+      
+      return this.paymentService.createPaymentIntent(eventId, userId);
+    }
+    
     // Webhook for stripe 
-
     @Post('/webhook')
     async handleStripeWebhook(
     @Req() req: Request,
     @Headers('stripe-signature') sig: string,
   ) {
+    console.log("in the controller of webhook")
     const endpointSecret = process.env.WEB_HOOK_SECRET;
     let event: Stripe.Event;
 
@@ -53,7 +56,8 @@ export class PaymentController {
         endpointSecret,
       );
     } catch (err) {
-      // return { error: `Webhook Error: ${err.message}` };
+      console.log("err = ", err);
+      return { error: `Webhook Error: ${err}` };
     }
 
     await this.paymentService.handleWebhook(event);
