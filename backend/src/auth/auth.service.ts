@@ -28,13 +28,20 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const user = await this.validateUser(loginDto.email, loginDto.password);
     const payload = { 
-    email: user.email, 
-    sub: user.id,
-    firstname: user.firstname,
-    lastname: user.lastname,
+      email: user.email, 
+      sub: user.id,
+      firstname: user.firstname,
+      lastname: user.lastname,
     };
+    
     return {
       token: this.jwtService.sign(payload),
+      user: {
+        email: user.email, 
+        sub: user.id,
+        firstname: user.firstname,
+        lastname: user.lastname,
+      }
     };
   }
 
@@ -55,7 +62,9 @@ export class AuthService {
     }
     
     const user = await this.userService.createUser(registerDto);
-    return user;
+    return { 
+      "message": "Registration successful, please login to continue" 
+    };
   }
 
   async findOrCreateUser(user: {
@@ -86,6 +95,10 @@ export class AuthService {
     });
 
     return newUser;
+  }
+
+  generateToken(payload: any) {
+    return this.jwtService.sign(payload);
   }
 
   generateResetToken(userId: string) {

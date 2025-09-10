@@ -23,6 +23,7 @@ export class AuthController {
     private userService: UserService
   ) {}
 
+  // for first API test
   @Get('/test')
   @UseGuards(AuthGuard('jwt'))
   async test(@Res() res) {
@@ -37,20 +38,24 @@ export class AuthController {
     return { message: 'Welcome to the dashboard!' };
   }
 
+
   @Post('/login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
-    const { token } = await this.authService.login(loginDto);
+  const { token, user } = await this.authService.login(loginDto);
 
   res.cookie('access_token', token, {
     httpOnly: true,
     secure: false, // true in production
     sameSite: 'lax',
-    maxAge: 1000 * 60 * 15, // 15 minutes
+    maxAge: 1000 * 60 * 60 * 24, // 24 hours
   });
 
-  // return { message: 'Login successful' };
-  return {"access_token":token};
+
+  return {
+    message: "login success",
+    user,
+  };
 }
 
 
@@ -89,6 +94,29 @@ export class AuthController {
   logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('access_token');
     return { message: 'Logout successful' };
+  }
+
+  @Get('/refresh')
+  @UseGuards(AuthGuard('jwt'))
+  async refreshToken(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const user = req.user as any; // Type assertion to access Prisma User properties
+    const payload = { 
+      email: user.email, 
+      sub: user.id,
+      firstname: user.firstname,
+      lastname: user.lastname,
+    };
+    
+    const newToken = this.authService.generateToken(payload);
+    
+    res.cookie('access_token', newToken, {
+      httpOnly: true,
+      secure: false, // true in production
+      sameSite: 'lax',
+      maxAge: 1000 * 60 * 60 * 24, // 24 hours
+    });
+
+    return { message: 'Token refreshed successfully' };
   }
 
   

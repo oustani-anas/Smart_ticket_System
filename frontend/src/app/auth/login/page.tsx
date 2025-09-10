@@ -57,15 +57,26 @@ export default function LoginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // receive httpOnly cookie
         body: JSON.stringify(data),
       })
 
       const result = await response.json()
 
       if (response.ok) {
-        // Store token and user data
-        localStorage.setItem('token', result.token || result.access_token)
-        localStorage.setItem('user', JSON.stringify(result.user || result))
+        // Store the returned user object only (token is in httpOnly cookie)
+        if (result?.user) {
+          const raw = result.user
+          // normalize backend fields to frontend shape
+          const normalized = {
+            id: raw.id || raw.sub,
+            email: raw.email,
+            firstName: raw.firstName || raw.firstname,
+            lastName: raw.lastName || raw.lastname,
+            name: raw.name,
+          }
+          localStorage.setItem('user', JSON.stringify(normalized))
+        }
         
         // Redirect to dashboard
         router.push('/dashboard')
