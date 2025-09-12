@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Ticket, LogOut, User, Settings, Bell, Calendar, TrendingUp, DollarSign, Activity, Plus, Eye, Edit, ArrowLeft } from 'lucide-react'
+import { Ticket, LogOut, User, Settings, Calendar, TrendingUp, DollarSign, Activity, Plus, Eye, Edit, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import NotificationBell from '@/components/NotificationBell'
 
 interface UserData {
   id?: string
@@ -166,6 +167,34 @@ export default function EventsPage() {
     return `$${price.toFixed(2)}`
   }
 
+  const startCheckout = async (eventId: string) => {
+    try {
+      const res = await fetch('http://localhost:4000/payment/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ eventId }),
+      })
+
+      if (!res.ok) {
+        console.error('Failed to create checkout session')
+        return
+      }
+
+      const data = await res.json()
+      const url = data?.url || data?.sessionUrl || data?.checkoutUrl
+      if (url) {
+        window.location.href = url
+      } else {
+        console.error('No checkout URL returned from backend')
+      }
+    } catch (err) {
+      console.error('Checkout error:', err)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -223,17 +252,10 @@ export default function EventsPage() {
 
             {/* User Menu */}
             <div className="flex items-center space-x-3">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="relative text-gray-600 hover:text-green-600 hover:bg-green-50"
+              <NotificationBell
+                count={typeof window !== 'undefined' ? Number(localStorage.getItem('unreadCount') || '0') : 0}
                 onClick={() => handleNavigation('/dashboard/notifications')}
-              >
-                <Bell className="h-4 w-4" />
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                  3
-                </span>
-              </Button>
+              />
               <div 
                 className="flex items-center space-x-3 bg-green-50 rounded-full px-3 py-1 cursor-pointer hover:bg-green-100 transition-colors duration-200"
                 onClick={() => handleNavigation('/dashboard/profile')}
@@ -385,6 +407,7 @@ export default function EventsPage() {
                     <Button 
                       size="sm" 
                       className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white"
+                      onClick={() => startCheckout(event.id)}
                     >
                       <Ticket className="h-3 w-3 mr-1" />
                       Get Ticket

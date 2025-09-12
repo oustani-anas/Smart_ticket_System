@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Ticket, LogOut, User, Settings, Bell, Calendar, TrendingUp, DollarSign, Activity, Plus, Eye, Edit, ArrowLeft, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import NotificationBell from '@/components/NotificationBell'
 
 interface UserData {
   id?: string
@@ -122,23 +123,33 @@ export default function NotificationsPage() {
   }
 
   const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
+    setNotifications(prev => {
+      const next = prev.map(notification => 
         notification.id === id 
           ? { ...notification, read: true }
           : notification
       )
-    )
+      const remaining = next.filter(n => !n.read).length
+      try { localStorage.setItem('unreadCount', String(remaining)) } catch {}
+      return next
+    })
   }
 
   const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
-    )
+    setNotifications(prev => {
+      const next = prev.map(notification => ({ ...notification, read: true }))
+      try { localStorage.setItem('unreadCount', '0') } catch {}
+      return next
+    })
   }
 
   const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id))
+    setNotifications(prev => {
+      const next = prev.filter(notification => notification.id !== id)
+      const remaining = next.filter(n => !n.read).length
+      try { localStorage.setItem('unreadCount', String(remaining)) } catch {}
+      return next
+    })
   }
 
   const getNotificationIcon = (type: string) => {
@@ -176,6 +187,11 @@ export default function NotificationsPage() {
   })()
 
   const unreadCount = notifications.filter(n => !n.read).length
+
+  // Persist unread count whenever it changes
+  useEffect(() => {
+    try { localStorage.setItem('unreadCount', String(unreadCount)) } catch {}
+  }, [unreadCount])
 
   if (isLoading) {
     return (
@@ -234,19 +250,11 @@ export default function NotificationsPage() {
 
             {/* User Menu */}
             <div className="flex items-center space-x-3">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="relative text-green-600 bg-green-50"
+              <NotificationBell
+                active
+                count={unreadCount}
                 onClick={() => handleNavigation('/dashboard/notifications')}
-              >
-                <Bell className="h-4 w-4" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                    {unreadCount}
-                  </span>
-                )}
-              </Button>
+              />
               <div 
                 className="flex items-center space-x-3 bg-green-50 rounded-full px-3 py-1 cursor-pointer hover:bg-green-100 transition-colors duration-200"
                 onClick={() => handleNavigation('/dashboard/profile')}

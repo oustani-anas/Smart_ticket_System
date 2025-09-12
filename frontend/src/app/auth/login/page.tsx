@@ -91,8 +91,8 @@ export default function LoginPage() {
   }
 
   const handleGoogleSignIn = () => {
-    // TODO: Implement NextAuth Google OAuth
-    console.log('Google Sign In clicked')
+    // Redirect to backend Google OAuth endpoint
+    window.location.href = 'http://localhost:4000/auth/google'
   }
 
   return (

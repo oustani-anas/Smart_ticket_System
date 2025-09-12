@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Ticket, LogOut, User, Settings, Bell, Calendar, TrendingUp, DollarSign, Activity, Plus, Eye, Edit, ArrowLeft, Shield, Palette, Globe, Mail } from 'lucide-react'
+import { Ticket, LogOut, User, Settings, Calendar, TrendingUp, DollarSign, Activity, Plus, Eye, Edit, ArrowLeft, Shield, Palette, Globe, Mail, Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import NotificationBell from '@/components/NotificationBell'
 
 interface UserData {
   id?: string
@@ -151,17 +152,10 @@ export default function SettingsPage() {
 
             {/* User Menu */}
             <div className="flex items-center space-x-3">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="relative text-gray-600 hover:text-green-600 hover:bg-green-50"
+              <NotificationBell
+                count={typeof window !== 'undefined' ? Number(localStorage.getItem('unreadCount') || '0') : 0}
                 onClick={() => handleNavigation('/dashboard/notifications')}
-              >
-                <Bell className="h-4 w-4" />
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                  3
-                </span>
-              </Button>
+              />
               <div 
                 className="flex items-center space-x-3 bg-green-50 rounded-full px-3 py-1 cursor-pointer hover:bg-green-100 transition-colors duration-200"
                 onClick={() => handleNavigation('/dashboard/profile')}

@@ -18,7 +18,10 @@ export class PaymentController {
           console.log("inside the create session endpoints");
           console.log(`eventid : ${eventId}`);
           console.log("req.user: ", req.user);
-          const userId = req.user['id']; // extracted from decoded JWT
+          console.log("req.user.id: ", req.user['id']);
+          console.log("req.user.sub: ", req.user['sub']);
+          const userId = req.user['id']; // extracted from user object returned by JWT strategy
+          console.log("Extracted userId: ", userId);
           return this.paymentService.createCheckoutSession(eventId, userId);
         }
     
@@ -30,7 +33,7 @@ export class PaymentController {
     ) {
       // The payload from the strategy is now on req.user
       // The user ID is in the 'sub' property.
-      const userId = req.user['id']; // UPDATED from 'id' to 'sub'
+      const userId = req.user['id']; // extracted from user object returned by JWT strategy
 
       if (!userId) {
         throw new Error('User ID not found in token.');

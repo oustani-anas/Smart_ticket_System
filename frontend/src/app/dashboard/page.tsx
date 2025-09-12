@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Ticket, LogOut, User, Settings, Bell, Calendar, TrendingUp, DollarSign, Activity, Plus, Eye, Edit } from 'lucide-react'
+import { Ticket, LogOut, User, Settings, Calendar, TrendingUp, DollarSign, Activity, Eye, Edit } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import NotificationBell from '@/components/NotificationBell'
 
 interface UserData {
   id?: string
@@ -171,17 +172,10 @@ export default function DashboardPage() {
 
             {/* User Menu */}
             <div className="flex items-center space-x-3">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="relative text-gray-600 hover:text-green-600 hover:bg-green-50"
+              <NotificationBell
+                count={typeof window !== 'undefined' ? Number(localStorage.getItem('unreadCount') || '0') : 0}
                 onClick={() => handleNavigation('/dashboard/notifications')}
-              >
-                <Bell className="h-4 w-4" />
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                  3
-                </span>
-              </Button>
+              />
               <div 
                 className="flex items-center space-x-3 bg-green-50 rounded-full px-3 py-1 cursor-pointer hover:bg-green-100 transition-colors duration-200"
                 onClick={() => handleNavigation('/dashboard/profile')}
@@ -225,13 +219,6 @@ export default function DashboardPage() {
                 Your event management hub is ready. Create, manage, and track your events with powerful analytics and insights.
               </p>
               <div className="flex flex-wrap gap-3">
-                <Button 
-                  className="h-12 px-6 rounded-full bg-white text-green-700 hover:bg-green-50 font-semibold shadow-md ring-1 ring-white/60 hover:ring-white transition-all duration-200 inline-flex items-center"
-                  onClick={() => handleNavigation('/dashboard/events')}
-                >
-                  <Plus className="h-5 w-5 mr-2" />
-                  Create Event
-                </Button>
                 <Button 
                   variant="ghost" 
                   className="h-11 px-5 rounded-full border border-white/60 text-white hover:bg-white/10 font-semibold inline-flex items-center backdrop-blur-sm/0"
@@ -332,16 +319,7 @@ export default function DashboardPage() {
               <span className="text-sm font-medium text-green-700">Get Started</span>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button 
-              className="h-24 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-              onClick={() => handleNavigation('/dashboard/events')}
-            >
-              <div className="text-center">
-                <Plus className="h-6 w-6 mx-auto mb-2" />
-                <span className="font-semibold">Create New Event</span>
-              </div>
-            </Button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Button 
               variant="outline" 
               className="h-24 border-2 border-green-200 hover:border-green-300 hover:bg-green-50 text-green-700 font-semibold transition-all duration-300"
@@ -404,15 +382,7 @@ export default function DashboardPage() {
               <div className="text-center py-8">
                 <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500 font-medium">No upcoming events</p>
-                <p className="text-sm text-gray-400 mb-4">Create your first event to get started</p>
-                <Button 
-                  size="sm"
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={() => handleNavigation('/dashboard/events')}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Event
-                </Button>
+                <p className="text-sm text-gray-400">Your events will appear here</p>
               </div>
             </div>
           </div>

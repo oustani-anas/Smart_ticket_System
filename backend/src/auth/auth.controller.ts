@@ -83,10 +83,28 @@ export class AuthController {
   @Get('/google/callback')
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req, @Res() res) {
-    console.log( "the user is logged with google oauth");
-    const user = req.user;
-    const jwt = await this.authService.loginWithGoogle(user);
-    res.redirect(`http://localhost:3000?token=${jwt.token}`);
+    console.log("=== Google OAuth Callback ===");
+    console.log("User from Google:", req.user);
+    
+    try {
+      const user = req.user;
+      const jwt = await this.authService.loginWithGoogle(user);
+      console.log("JWT generated:", jwt);
+      
+      // Set the JWT token as an HTTP-only cookie
+      res.cookie('access_token', jwt.token, {
+        httpOnly: true,
+        secure: false, // Set to true in production with HTTPS
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 60 * 24, // 24 hours
+      });
+      
+      console.log("Cookie set, redirecting to frontend...");
+      res.redirect(`http://localhost:3000/auth/callback?token=${jwt.token}`);
+    } catch (error) {
+      console.error("Error in Google OAuth callback:", error);
+      res.redirect(`http://localhost:3000/auth/callback?error=callback_failed`);
+    }
   }
 
   @Get('/logout')

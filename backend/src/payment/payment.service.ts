@@ -29,6 +29,10 @@ export class PaymentService {
               throw new InternalServerErrorException('Event not found');
             }
             console.log("inside the creation of session of the payment");
+            console.log("Creating Stripe session with metadata:");
+            console.log("eventId:", eventId);
+            console.log("userId:", userId);
+            
             const session = await this.stripe.checkout.sessions.create({
               line_items: [
                 {
@@ -44,8 +48,8 @@ export class PaymentService {
               ],
               mode: 'payment',
               // success_url: `http://localhost:5173/paymentSuccess`,
-              success_url: `http://localhost:5173/paymentSuccess?session_id={CHECKOUT_SESSION_ID}`,
-              cancel_url: `http://localhost:5173/events`,
+              success_url: `http://localhost:3000/paymentSuccess?session_id={CHECKOUT_SESSION_ID}`,
+              cancel_url: `http://localhost:3000/events`,
               metadata: {
                 eventId,
                 userId,
@@ -133,11 +137,17 @@ export class PaymentService {
 // NEW HELPER METHOD TO AVOID CODE DUPLICATION
 // ====================================================================
 private async createTicketFromWebhook(metadata: Stripe.Metadata) {
+  console.log("=== Webhook createTicketFromWebhook ===");
+  console.log("Received metadata:", metadata);
+  console.log("metadata.userId:", metadata.userId);
+  console.log("metadata.eventId:", metadata.eventId);
+  
   const userId = metadata.userId;
   const eventId = metadata.eventId;
 
   if (!userId || !eventId) {
     this.logger.error('Webhook metadata missing userId or eventId');
+    console.log("Missing data - userId:", userId, "eventId:", eventId);
     return;
   }
   

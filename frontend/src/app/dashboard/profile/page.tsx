@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Ticket, LogOut, User, Settings, Bell, Calendar, TrendingUp, DollarSign, Activity, Plus, Eye, Edit, ArrowLeft, Mail, Phone, MapPin } from 'lucide-react'
+import { Ticket, LogOut, User, Settings, Calendar, TrendingUp, DollarSign, Activity, Plus, Eye, Edit, ArrowLeft, Mail, Phone, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import NotificationBell from '@/components/NotificationBell'
 
 interface UserData {
   id?: string
@@ -115,7 +116,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Navigation Menu */}
-            <nav className="hidden md:flex items-center space-x-3">
+            <nav className="hidden md:flex items-center space-x-6 md:space-x-8">
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -147,33 +148,26 @@ export default function ProfilePage() {
 
             {/* User Menu */}
             <div className="flex items-center space-x-3">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="relative text-gray-600 hover:text-green-600 hover:bg-green-50"
+              <NotificationBell
+                count={typeof window !== 'undefined' ? Number(localStorage.getItem('unreadCount') || '0') : 0}
                 onClick={() => handleNavigation('/dashboard/notifications')}
-              >
-                <Bell className="h-4 w-4" />
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                  3
-                </span>
-              </Button>
+              />
               <div 
-                className="flex items-center space-x-3 bg-green-100 rounded-full px-3 py-1 cursor-pointer hover:bg-green-200 transition-colors duration-200 border-2 border-green-300"
+                className="flex items-center space-x-3 bg-green-50 rounded-full px-3 py-1 cursor-pointer hover:bg-green-100 transition-colors duration-200"
                 onClick={() => handleNavigation('/dashboard/profile')}
               >
                 <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-full p-1.5">
                   <User className="h-3 w-3 text-white" />
                 </div>
-                <span className="text-sm font-medium text-green-800 hidden sm:block">{displayName}</span>
+                <span className="text-sm font-medium text-gray-700 hidden sm:block">{displayName}</span>
               </div>
               <Button 
                 onClick={handleLogout}
                 variant="outline" 
                 size="sm"
-                className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 ml-4 px-4"
+                className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 ml-6 md:ml-8 px-4"
               >
-                <LogOut className="h-4 w-4 mr-2" />
+                <LogOut className="h-4 w-4 mr-1" />
                 <span className="hidden sm:inline">Logout</span>
               </Button>
             </div>
