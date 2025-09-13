@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Ticket, LogOut, User, Settings, Calendar, TrendingUp, DollarSign, Activity, Plus, Eye, Edit, ArrowLeft, Mail, Phone, MapPin } from 'lucide-react'
+import { Ticket, LogOut, User, Settings, Calendar, TrendingUp, DollarSign, Activity, Plus, Eye, Edit, ArrowLeft, Mail, Phone, MapPin, Download, Clock, MapPin as LocationIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import NotificationBell from '@/components/NotificationBell'
 
@@ -14,10 +14,94 @@ interface UserData {
   name?: string
 }
 
+interface TicketData {
+  id: string
+  eventId: string
+  userId: string
+  status: string
+  type: string
+  price: number
+  createdAt: string
+  event: {
+    id: string
+    title: string
+    description: string
+    date: string
+    time: string
+    location: string
+    price: number
+    imageUrl?: string
+  }
+}
+
 export default function ProfilePage() {
   const [user, setUser] = useState<UserData | null>(null)
+  const [tickets, setTickets] = useState<TicketData[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [ticketsLoading, setTicketsLoading] = useState(false)
   const router = useRouter()
+
+  const fetchTickets = async () => {
+    setTicketsLoading(true)
+    try {
+      const response = await fetch('http://localhost:4000/ticket/my-tickets', {
+        method: 'GET',
+        credentials: 'include',
+      })
+      
+      if (response.ok) {
+        const ticketsData = await response.json()
+        setTickets(ticketsData)
+      } else {
+        console.error('Failed to fetch tickets:', response.statusText)
+      }
+    } catch (error) {
+      console.error('Error fetching tickets:', error)
+    } finally {
+      setTicketsLoading(false)
+    }
+  }
+
+  const downloadTicket = async (ticketId: string) => {
+    try {
+      const response = await fetch(`http://localhost:4000/ticket/${ticketId}/download`, {
+        method: 'GET',
+        credentials: 'include',
+      })
+      
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `ticket-${ticketId}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        console.error('Failed to download ticket')
+      }
+    } catch (error) {
+      console.error('Error downloading ticket:', error)
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
+
+  const formatTime = (timeString: string) => {
+    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    })
+  }
 
   useEffect(() => {
     const init = async () => {
@@ -63,6 +147,7 @@ export default function ProfilePage() {
     }
 
     init()
+    fetchTickets()
   }, [router])
 
   const handleLogout = async () => {
@@ -176,7 +261,7 @@ export default function ProfilePage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex items-center mb-4">
@@ -207,8 +292,146 @@ export default function ProfilePage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Profile Card */}
-          <div className="lg:col-span-1">
+          {/* Left Column - Ticket History */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">Ticket History</h3>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={fetchTickets}
+                  disabled={ticketsLoading}
+                  className="text-green-600 border-green-200 hover:bg-green-50"
+                >
+                  {ticketsLoading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                  ) : (
+                    <>
+                      <Eye className="h-4 w-4 mr-2" />
+                      Refresh
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              {ticketsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                </div>
+              ) : tickets.length === 0 ? (
+                <div className="text-center py-8">
+                  <Ticket className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500 text-lg">No tickets purchased yet</p>
+                  <p className="text-gray-400 text-sm mt-2">Your purchased tickets will appear here</p>
+                  <Button 
+                    className="mt-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white"
+                    onClick={() => handleNavigation('/dashboard/events')}
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Browse Events
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-[500px] overflow-y-auto">
+                  {tickets.map((ticket) => (
+                    <div key={ticket.id} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow duration-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center mb-3">
+                            <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-2 mr-3">
+                              <Ticket className="h-5 w-5 text-white" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900 text-lg">{ticket.event.title}</h4>
+                              <p className="text-sm text-gray-600">Ticket ID: {ticket.id.slice(0, 8)}...</p>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                            <div className="flex items-center text-sm text-gray-600">
+                              <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+                              <span>{formatDate(ticket.event.date)}</span>
+                            </div>
+                            <div className="flex items-center text-sm text-gray-600">
+                              <Clock className="h-4 w-4 mr-2 text-gray-400" />
+                              <span>{formatTime(ticket.event.time)}</span>
+                            </div>
+                            <div className="flex items-center text-sm text-gray-600">
+                              <LocationIcon className="h-4 w-4 mr-2 text-gray-400" />
+                              <span className="truncate">{ticket.event.location}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                            <div className="flex items-center space-x-4">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {ticket.status}
+                              </span>
+                              <span className="text-sm text-gray-600">
+                                Purchased: {formatDate(ticket.createdAt)}
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-lg font-semibold text-gray-900">${ticket.price}</p>
+                              <p className="text-xs text-gray-500">{ticket.type}</p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="ml-4 flex flex-col space-y-2">
+                          <Button
+                            size="sm"
+                            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white"
+                            onClick={() => downloadTicket(ticket.id)}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-gray-600 border-gray-300 hover:bg-gray-50"
+                            onClick={() => handleNavigation(`/dashboard/events`)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Event
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Account Statistics - Compact Version */}
+            <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Statistics</h3>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors duration-200">
+                  <Calendar className="h-6 w-6 text-green-600 mx-auto mb-2" />
+                  <p className="text-xl font-bold text-gray-900">0</p>
+                  <p className="text-xs text-gray-600">Events Created</p>
+                </div>
+                <div className="text-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors duration-200">
+                  <Ticket className="h-6 w-6 text-blue-600 mx-auto mb-2" />
+                  <p className="text-xl font-bold text-gray-900">{tickets.length}</p>
+                  <p className="text-xs text-gray-600">Tickets Purchased</p>
+                </div>
+                <div className="text-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors duration-200">
+                  <DollarSign className="h-6 w-6 text-purple-600 mx-auto mb-2" />
+                  <p className="text-xl font-bold text-gray-900">$0</p>
+                  <p className="text-xs text-gray-600">Total Revenue</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Profile Card and Information */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Profile Card */}
             <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
               <div className="text-center">
                 <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-full p-6 w-28 h-28 mx-auto mb-6 flex items-center justify-center shadow-lg">
@@ -237,28 +460,24 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Profile Information */}
-          <div className="lg:col-span-2">
+            {/* Profile Information */}
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
               <h3 className="text-xl font-semibold text-gray-900 mb-6">Profile Information</h3>
               
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                      <User className="h-4 w-4 text-gray-400 mr-3" />
-                      <span className="text-gray-900">{user?.firstName || 'Not provided'}</span>
-                    </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                  <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                    <User className="h-4 w-4 text-gray-400 mr-3" />
+                    <span className="text-gray-900">{user?.firstName || 'Not provided'}</span>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                      <User className="h-4 w-4 text-gray-400 mr-3" />
-                      <span className="text-gray-900">{user?.lastName || 'Not provided'}</span>
-                    </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                  <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                    <User className="h-4 w-4 text-gray-400 mr-3" />
+                    <span className="text-gray-900">{user?.lastName || 'Not provided'}</span>
                   </div>
                 </div>
 
@@ -270,44 +489,19 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                      <Phone className="h-4 w-4 text-gray-400 mr-3" />
-                      <span className="text-gray-500">Not provided</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                      <MapPin className="h-4 w-4 text-gray-400 mr-3" />
-                      <span className="text-gray-500">Not provided</span>
-                    </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                  <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                    <Phone className="h-4 w-4 text-gray-400 mr-3" />
+                    <span className="text-gray-500">Not provided</span>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Account Stats */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 mt-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-6">Account Statistics</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center p-4 bg-green-50 rounded-xl">
-                  <Calendar className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-gray-900">0</p>
-                  <p className="text-sm text-gray-600">Events Created</p>
-                </div>
-                <div className="text-center p-4 bg-blue-50 rounded-xl">
-                  <Ticket className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-gray-900">0</p>
-                  <p className="text-sm text-gray-600">Tickets Sold</p>
-                </div>
-                <div className="text-center p-4 bg-purple-50 rounded-xl">
-                  <DollarSign className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-gray-900">$0</p>
-                  <p className="text-sm text-gray-600">Total Revenue</p>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                  <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                    <MapPin className="h-4 w-4 text-gray-400 mr-3" />
+                    <span className="text-gray-500">Not provided</span>
+                  </div>
                 </div>
               </div>
             </div>
