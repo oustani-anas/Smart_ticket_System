@@ -139,7 +139,8 @@ export class AuthService {
 
   // Send reset email
   async sendResetEmail(email: string, token: string) {
-    const resetLink = `http://localhost:3000/auth/reset-password?token=${token}`;
+    const frontendBase = this.configService.get<string>('FRONTEND_BASE_URL') || 'http://localhost:3000';
+    const resetLink = `${frontendBase}/auth/reset-password?token=${token}`;
 
     const gmailUser = this.configService.get<string>('GMAIL');
     const gmailPass = this.configService.get<string>('PASSWORD');

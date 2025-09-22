@@ -33,6 +33,7 @@ export class PaymentService {
             console.log("eventId:", eventId);
             console.log("userId:", userId);
             
+            const frontendBase = this.configservice.get<string>('FRONTEND_BASE_URL') || 'http://localhost:3000';
             const session = await this.stripe.checkout.sessions.create({
               line_items: [
                 {
@@ -47,9 +48,9 @@ export class PaymentService {
                 },
               ],
               mode: 'payment',
-              // success_url: `http://localhost:5173/paymentSuccess`,
-              success_url: `http://localhost:3000/paymentSuccess?session_id={CHECKOUT_SESSION_ID}`,
-              cancel_url: `http://localhost:3000/events`,
+              // success_url: `${frontendBase}/paymentSuccess?session_id={CHECKOUT_SESSION_ID}`,
+              success_url: `${frontendBase}/paymentSuccess?session_id={CHECKOUT_SESSION_ID}`,
+              cancel_url: `${frontendBase}/events`,
               metadata: {
                 eventId,
                 userId,

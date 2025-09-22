@@ -100,10 +100,12 @@ export class AuthController {
       });
       
       console.log("Cookie set, redirecting to frontend...");
-      res.redirect(`http://localhost:3000/auth/callback?token=${jwt.token}`);
+      const frontendBase = process.env.FRONTEND_BASE_URL || 'http://localhost:3000';
+      res.redirect(`${frontendBase}/auth/callback?token=${jwt.token}`);
     } catch (error) {
       console.error("Error in Google OAuth callback:", error);
-      res.redirect(`http://localhost:3000/auth/callback?error=callback_failed`);
+      const frontendBase = process.env.FRONTEND_BASE_URL || 'http://localhost:3000';
+      res.redirect(`${frontendBase}/auth/callback?error=callback_failed`);
     }
   }
 
